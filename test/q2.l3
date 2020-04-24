@@ -1,18 +1,58 @@
+;; Signature: map(func,lst)
+;; Purpose: Apply func to all elements in lst and return the list of the results
+;; Type: [ (T1->T2) * List(T1) -> List(T2)]
+;; Example: map((lambda (x) (+ 2 x)), '(1 2 3) ) should return '(3 4 5)
+;; Pre-conditions: None
+;; Post-condition: '(func(lst[0]) func(lst[1]) ... func(lst[n-1]))
+;; Tests: (map (lambda (x) (+ 2 x)) '(1 2 3) )) ==> '(3 4 5)
+(define map
+  (lambda (func lst)
+    (if (empty? lst)
+        '()
+        (cons (func (car lst))
+              (map func (cdr lst))
+        )
+    )
+   )
+)
+
+;; Signature: reduce(reducer, init, l)
+;; Purpose: Combine all the values of l using reducer
+;; Type: [(T1 * T2 -> T2) * T2 * List(T1) -> T2]
+;; Example: (reduce + 0 '(1 2 3)) --> (+ 1 (+ 2 (+ 3 0)))
+;; Pre-conditions: None
+;; Post-condition: None
+;; Tests: (reduce + 0 '(1 2 3)) ==> 6
+(define reduce
+  (lambda (reducer init l)
+    (if (empty? l)
+        init
+        (reducer (car l) 
+                 (reduce reducer init (cdr l))))))
+
 (define last-element
    (lambda (lst)
       @TODO
   )
 )
 
+;; TODO: just need to add the case when n2 == 0
 (define power
     (lambda (n1 n2)
-       @TODO
+       (if (= 1 n2) n1 (* n1 (power n1 (- n2 1))))
     )
 )
 
+;; Signature: sum-lst-power(lst, n)
+;; Purpose: apply power on each element of lst, and then sum the results
+;; Type: [List(Number) * Number -> Number]
+;; Example: (sum-lst-power (list 1 4 2) 3) → 1^3+ 4^3 + 2^3 = 73
+;; Pre-conditions: n >= 0
+;; Post-condition: Result = (+ (power lst[0] n) (+ ... powerlst[n]) ... )
+;; Tests: (sum-lst-power (list 1 4 2) 3) ==> 1^3+ 4^3 + 2^3 = 73
 (define sum-lst-power
     (lambda (lst n)
-       @TODO
+      (reduce + 0 (map (lambda (x) (power x n)) lst))
     )
 )
       
