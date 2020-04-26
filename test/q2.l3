@@ -30,9 +30,19 @@
         (reducer (car l) 
                  (reduce reducer init (cdr l))))))
 
+;; Signature: last-element(lst)
+;; Purpose: Return the last element of a given list
+;; Type: [List(T) -> T]
+;; Example: (last-element (list 1 3 4)) --> (car (cdr (cdr '(1 3 4))))
+;; Pre-conditions: lst is not empty
+;; Post-condition: None
+;; Tests: (last-element (list 1 3 4)) ==> 4
 (define last-element
-   (lambda (lst)
-      @TODO
+  (lambda (lst)
+    (if (eq? '() (cdr lst))
+        (car lst)
+        (last-element (cdr lst))
+    )
   )
 )
 
