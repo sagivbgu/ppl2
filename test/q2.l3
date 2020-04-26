@@ -70,11 +70,31 @@
 )
       
   
+;; Signature: remove-last-element(lst)
+;; Purpose: Return a copy of the given list without its last element
+;; Type: [List(T) -> List(T)]
+;; Example: (last-element (list 1 3 4)) --> (cons 1 (cons 3 (cons 4 '())))
+;; Pre-conditions: None
+;; Post-condition: None
+;; Tests: (remove-last-element (list 1 3 4)) ==> '(1 3)
+(define remove-last-element
+  (lambda (lst)
+    (if (eq? '() (cdr lst))
+        '()
+        (cons (car lst) (remove-last-element (cdr lst))))))
+
+;; Signature: num-from-digits(lst)
+;; Purpose: Return the number consisted from lst's digits
+;; Type: [List(number) -> number]
+;; Pre-conditions: All of the numbers in lst are not negative
+;; Post-condition: None
+;; Tests: (num-from-digits (list 2 4 6)) ==> 246
 (define num-from-digits
   (lambda (lst)
-     @TODO
-  )
-)
+    (if (eq? lst '())
+        0
+        (+ (last-element lst) (* 10 (num-from-digits (remove-last-element lst)))))))
+
 
 (define is-narcissistic
   (lambda (lst)
