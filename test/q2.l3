@@ -41,17 +41,20 @@
   (lambda (lst)
     (if (eq? '() (cdr lst))
         (car lst)
-        (last-element (cdr lst))
-    )
-  )
-)
+        (last-element (cdr lst)))))
 
-;; TODO: just need to add the case when n2 == 0
+;; Signature: power(n1, n2)
+;; Purpose: Return n1 to the power of n2 (n1^n2)
+;; Type: [number * number -> number]
+;; Example: (power 2 4) -> (* 2 (* 2 (* 2 2)))
+;; Pre-conditions: n1 and n2 are non-negative numbers
+;; Post-condition: None
+;; Tests: (power 2 4) ==> 16
 (define power
     (lambda (n1 n2)
-       (if (= 1 n2) n1 (* n1 (power n1 (- n2 1))))
-    )
-)
+        (cond ((= 0 n2) 1)
+              ((= 1 n2) n1)
+              (else (* n1 (power n1 (- n2 1)))))))
 
 ;; Signature: sum-lst-power(lst, n)
 ;; Purpose: apply power on each element of lst, and then sum the results
