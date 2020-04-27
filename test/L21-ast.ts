@@ -38,7 +38,7 @@ import { Result, makeOk, makeFailure, bind, mapResult, safe2, safe3 } from "../i
 // A toplevel expression in L2 - can appear in a program
 export type Exp = DefineExp | CExp;
 export type AtomicExp = NumExp | BoolExp | PrimOp | VarRef;
-export type CompoundExp = AppExp | IfExp | ProcExp;
+export type CompoundExp = AppExp | IfExp | ProcExp | ForExp; // Question 3.1 - Added ForExp
 export type CExp =  AtomicExp | CompoundExp;
 
 export interface Program {tag: "Program"; exps: Exp[]; }
@@ -53,6 +53,9 @@ export interface AppExp {tag: "AppExp", rator: CExp, rands: CExp[]; }
 // L2
 export interface IfExp {tag: "IfExp"; test: CExp; then: CExp; alt: CExp; };
 export interface ProcExp {tag: "ProcExp"; args: VarDecl[], body: CExp[]; };
+
+// Question 3.1 - L21
+export interface ForExp {tag: "ForExp"; var: VarDecl; start: NumExp; end: NumExp; body: CExp};
 
 // Type value constructors for disjoint types
 export const makeProgram = (exps: Exp[]): Program => ({tag: "Program", exps: exps});
@@ -71,6 +74,10 @@ export const makeIfExp = (test: CExp, then: CExp, alt: CExp): IfExp =>
 export const makeProcExp = (args: VarDecl[], body: CExp[]): ProcExp =>
     ({tag: "ProcExp", args: args, body: body});
 
+// Question 3.1 - L21
+export const makeForExp = (variable: VarDecl, start: NumExp, end: NumExp, body: CExp): ForExp =>
+    ({tag: "ForExp", var: variable, start: start, end: end, body: body});
+
 // Type predicates for disjoint types
 export const isProgram = (x: any): x is Program => x.tag === "Program";
 export const isDefineExp = (x: any): x is DefineExp => x.tag === "DefineExp";
@@ -84,13 +91,16 @@ export const isAppExp = (x: any): x is AppExp => x.tag === "AppExp";
 export const isIfExp = (x: any): x is IfExp => x.tag === "IfExp";
 export const isProcExp = (x: any): x is ProcExp => x.tag === "ProcExp";
 
+// Question 3.1 - L21
+export const isForExp = (x: any): x is ForExp => x.tag === "ForExp";
+
 // Type predicates for type unions
 export const isExp = (x: any): x is Exp => isDefineExp(x) || isCExp(x);
 export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) ||
     isPrimOp(x) || isVarRef(x);
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isForExp(x); // Question 3.1 - Added ForExp
 export const isCExp = (x: any): x is CExp =>
     isAtomicExp(x) || isCompoundExp(x);
 
