@@ -10,11 +10,7 @@
     (if (empty? lst)
         '()
         (cons (func (car lst))
-              (map func (cdr lst))
-        )
-    )
-   )
-)
+              (map func (cdr lst))))))
 
 ;; Signature: reduce(reducer, init, l)
 ;; Purpose: Combine all the values of l using reducer
@@ -29,6 +25,18 @@
         init
         (reducer (car l) 
                  (reduce reducer init (cdr l))))))
+
+;; Signature:length-of-lst(lst)
+;; Purpose: calculate the length of the given list
+;; Type: [List(T) -> Number]
+;; Pre-conditions: None
+;; Post-condition: None
+;; Tests: (length-of-lst (list 1 2 3)) → 3
+(define length-of-lst
+  (lambda (lst)
+    (if (eq? lst '())
+         0
+         (+ 1 (length-of-lst(cdr lst))))))
 
 ;; Signature: last-element(lst)
 ;; Purpose: Return the last element of a given list
@@ -65,10 +73,7 @@
 ;; Tests: (sum-lst-power (list 1 4 2) 3) ==> 1^3+ 4^3 + 2^3 = 73
 (define sum-lst-power
     (lambda (lst n)
-      (reduce + 0 (map (lambda (x) (power x n)) lst))
-    )
-)
-      
+      (reduce + 0 (map (lambda (x) (power x n)) lst))))
   
 ;; Signature: remove-last-element(lst)
 ;; Purpose: Return a copy of the given list without its last element
@@ -95,10 +100,16 @@
         0
         (+ (last-element lst) (* 10 (num-from-digits (remove-last-element lst)))))))
 
-
+;; Signature:is-narcissistic(lst)
+;; Purpose: Find out if a number is narcissistic (equals to the sum of its digits each
+;;          raised to the power of the number of its digits)
+;; Type: [List(number) -> boolean]
+;; Pre-conditions: All of the numbers in lst are not negative
+;; Post-condition: None
+;; Tests: (is-narcissistic (list 1 5 3)) → #t
+;; Tests: (is-narcissistic (list 1 2 3)) → #f
 (define is-narcissistic
   (lambda (lst)
-       @TODO
-    )
-)
- 
+      (if (eq? (sum-lst-power lst (length-of-lst lst)) (num-from-digits lst) )
+      #t
+      #f)))
