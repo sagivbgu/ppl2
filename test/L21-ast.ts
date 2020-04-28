@@ -27,6 +27,7 @@ import { Result, makeOk, makeFailure, bind, mapResult, safe2, safe3 } from "../i
 ;;         |  ( lambda ( <var>* ) <cexp>+ ) / ProcExp(params:VarDecl[], body:CExp[]))
 ;;         |  ( if <cexp> <cexp> <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
 ;;         |  ( <cexp> <cexp>* )            / AppExp(operator:CExp, operands:CExp[]))
+;;         |  (for <var> <number> <number> <cexp>) / ForExp(var:VarDecl, start:NumExp, end:NumExp, body:CExp)
 ;; <prim-op>  ::= + | - | * | / | < | > | = | not |  and | or | eq?
 ;;                  number? | boolean? ##### L2
 ;; <num-exp>  ::= a number token
@@ -154,6 +155,7 @@ export const parseL21CompoundExp = (op: Sexp, params: Sexp[]): Result<Exp> =>
 export const parseL21CompoundCExp = (op: Sexp, params: Sexp[]): Result<CExp> =>
     op === "if" ? parseIfExp(params) :
     op === "lambda" ? parseProcExp(first(params), rest(params)) :
+    op === "for" ? parseForExp(first(params), rest(params)) :
     parseAppExp(op, params);
 
 // <DefineExp> -> (define <VarDecl> <CExp>)
@@ -205,3 +207,11 @@ const parseProcExp = (vars: Sexp, body: Sexp[]): Result<ProcExp> =>
         bind(mapResult(parseL21CExp, body),
              (cexps: CExp[]) => makeOk(makeProcExp(map(makeVarDecl, vars), cexps))) :
     makeFailure("Invalid vars for ProcExp");
+
+// <ForExp> -> (for <VarDecl> <NumExp> <NumExp> <CExp>)
+const parseForExp = (first: Sexp, rest: Sexp[]): Result<ForExp> =>
+   isEmpty(first) || rest.length !== 3 ? makeFailure("Expression not of the form (for <var> <num> <num> <cexp>)") :
+   !isIdentifier(first) ? makeFailure("First arg of for should be variable") :
+   bind(mapResult(parseL21CExp, rest),
+        (cexps: CExp[]) => !isNumExp(cexps[0]) || !isNumExp(cexps[1]) ? makeFailure("Second and third args of for should be num") :
+                           makeOk(makeForExp(makeVarDecl(first), cexps[0], cexps[1], cexps[2])));
