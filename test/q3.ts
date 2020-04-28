@@ -1,5 +1,5 @@
-import { ForExp, AppExp, Exp, Program, makeAppExp, makeProcExp, makeNumExp } from "./L21-ast";
-import { Result } from "../imp/result";
+import { ForExp, AppExp, Exp, Program, makeAppExp, makeProcExp, makeNumExp, isForExp, isExp, isProgram, makeProgram } from "./L21-ast";
+import { Result, makeOk, bind, mapResult, makeFailure } from "../imp/result";
 import { append, map } from 'ramda';
 
 /*
@@ -30,10 +30,16 @@ export const for2app = (exp: ForExp): AppExp =>
         ,[]);               // The application has no operands
 
 /*
-Purpose: @TODO
-Signature: @TODO
-Type: @TODO
+Signature: for2app(exp)
+Type: [Exp | Program] => Result<Exp | Program>
+Purpose: Convert and L21 AST to the equivalent L2 AST
+Pre-conditions: None
+Tests: @TODO
 */
-
 export const L21ToL2 = (exp: Exp | Program): Result<Exp | Program> =>
-    @TODO
+    isProgram(exp) ? bind(mapResult((e: Exp): Result<Exp> => 
+                                    isForExp(e) ? makeOk(for2app(e)) : makeOk(e)
+                                    ,exp.exps)
+                          ,(exps: Exp[]) => makeOk(makeProgram(exps))) :
+    isForExp(exp) ? makeOk(for2app(exp)) :
+    makeOk(exp);
