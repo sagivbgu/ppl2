@@ -53,11 +53,14 @@ export const for2app = (exp: ForExp): AppExp =>
         ,[]);          // The application has no operands
 
 /*
-Signature: for2app(exp)
-Type: [Exp | Program] => Result<Exp | Program>
-Purpose: Convert and L21 AST to the equivalent L2 AST
+Signature: L21ToL2(exp)
+Type: (exp: Exp | Program) => Result<Exp | Program>
+Purpose: Convert an L21 AST to the equivalent L2 AST (without ForExp)
 Pre-conditions: None
-Tests: @TODO
+Tests: (L21 ((lambda (x) (* x x)) (+ 5 4)) (if (> y 6) 8 (for i 1 3 (* i i)))) ===
+       (L21 ((lambda (x) (* x x)) (+ 5 4)) (if (> y 6) 8 ((lambda () ((lambda (i) (* i i)) 1) 
+                                                                     ((lambda (i) (* i i)) 2) 
+                                                                     ((lambda (i) (* i i)) 3)) )))
 */
 export const L21ToL2 = (exp: Exp | Program): Result<Exp | Program> =>
     isProgram(exp) ? bind(mapResult(convertExp, exp.exps),
@@ -65,28 +68,25 @@ export const L21ToL2 = (exp: Exp | Program): Result<Exp | Program> =>
     convertExp(exp);
 
 /*
-Signature: convertExpsArray(exps)
-Type: [Exp[]] => Result<Exp[]>
-Purpose: Convert each ForExp in the array to AppExp
+Signature: convertExp(exp)
+Type: (exp: Exp) => Result<Exp>
+Purpose: Convert an Exp in L21 to the equivalent Exp in L2
 Pre-conditions: None
-Tests: @TODO
+Tests: the same as L21ToL2
 */
 const convertExp = (exp: Exp) : Result<Exp> =>
     isDefineExp(exp) ? bind(convertCExp(exp.val),
                             (value: CExp) => makeOk(makeDefineExp(exp.var, value))) :
     isCExp(exp) ? convertCExp(exp) : 
     makeFailure("Unknown Situation");
-    
-    /*
-    makeOk(makeIfExp(test: convertExp(exp.test).value, 
-                                    then: convertExp(exp.then),
-                                    alt: convertExp(alt.then)))
-    isProcExp(exp) ? convertExpsArray(exp.body) :
-    isForExp(exp) ? convertExp(exp.body) :
-    makeOk(exp); // stop of the recursion
-c
+
+/*
+Signature: convertCExp(exp)
+Type: (exp: CExp) => Result<CExp>
+Purpose: Convert a CExp in L21 to the equivalent CExp in L2
+Pre-conditions: None
+Tests: the same as L21ToL2
 */
-    
 const convertCExp = (exp: CExp) : Result<CExp> =>
     isIfExp(exp) ? bind(mapResult(convertCExp, [exp.test, exp.then, exp.alt]),
                         (exps: CExp[]) => makeOk(makeIfExp(exps[0], exps[1], exps[2]))) : 
