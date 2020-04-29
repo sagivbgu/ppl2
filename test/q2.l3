@@ -7,7 +7,7 @@
 
 (define reduce
   (lambda (reducer init l)
-    (if (eq? lst '())
+    (if (eq? l '())
         init
         (reducer (car l) 
                  (reduce reducer init (cdr l))))))
