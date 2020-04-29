@@ -43,14 +43,18 @@ Tests:  for2app(makeForExp(
                 [makeNumExp(3)]),
                 ]),[]);
 */
-export const for2app = (exp: ForExp): AppExp =>
-    makeAppExp(         // create an AppExp
-        makeProcExp([],     // The operator is a procedure with no parameters
-            map(                // The body of the procedure is an array
-                (x: number): AppExp => // each element is an AppExp
-                makeAppExp(makeProcExp([exp.var], [exp.body]), [makeNumExp(x)]), // That applies the body of the for
-                createNumsArray(exp.start.val, exp.end.val)))                    // on each number from start to end
-        ,[]);          // The application has no operands
+export const for2app = (exp: ForExp): AppExp => {
+    const numsArray = createNumsArray(exp.start.val, exp.end.val); // Create an array of numbers [start, ..., end]
+
+    const procBody = map((x: number): AppExp => 
+                        makeAppExp(makeProcExp([exp.var], [exp.body]), [makeNumExp(x)]),
+                        numsArray); // the body of the proc is AppExps each applies
+                                    // a ProcExp with the same body of the ForExp 
+                                    // on each number in the array [start, ... , end]
+
+    return makeAppExp(makeProcExp([], procBody) // Finally, create an AppExp applying this ProcExp
+                      ,[]);                     // the AppExp has no operands
+}
 
 /*
 Signature: L21ToL2(exp)
@@ -95,4 +99,4 @@ const convertCExp = (exp: CExp) : Result<CExp> =>
     isProcExp(exp) ? bind(mapResult(convertCExp, exp.body),
                         (exps: CExp[]) => makeOk(makeProcExp(exp.args, exps))) :
     isForExp(exp) ? convertCExp(for2app(exp)) : // this will convert all the ForExps in the program
-    makeOk(exp);
+    makeOk(exp); // All AtomicExps are fine
