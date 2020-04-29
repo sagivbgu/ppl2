@@ -1,7 +1,7 @@
-import { Exp, Program, PrimOp, AppExp, isProgram, isBoolExp, isNumExp, isVarRef, isPrimOp, isDefineExp, isProcExp, isIfExp, isAppExp, CExp, makePrimOp, makeProcExp, makeAppExp } from "../imp/L2-ast";
+import { Exp, Program, PrimOp, isProgram, isBoolExp, isNumExp, isVarRef, isPrimOp, isDefineExp, isProcExp, isIfExp, isAppExp, CExp } from "../imp/L2-ast";
 import { Result, makeOk, makeFailure, mapResult, bind, safe3, safe2 } from "../imp/result";
-import { rest, first, isEmpty, allT } from '../imp/list';
-import { map, reduce } from "ramda";
+import { rest, first, isEmpty } from '../imp/list';
+import { map } from "ramda";
 
 const unaryPrimToJs = (rator: PrimOp, rands: CExp[], resultPattern: string): Result<string> =>
     isEmpty(rands) || !isEmpty(rest(rands)) ? makeFailure(`'${rator.op}' arity mismatch"`) :
