@@ -59,7 +59,7 @@ const primAppToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
     
     ["<", ">", "=", "eq?"].includes(rator.op) ? equalityPrimToJS(rator, rands) :
 
-    rator.op === "not" ? unaryPrimToJs(rator, rands, "${rand} === false") :
+    rator.op === "not" ? unaryPrimToJs(rator, rands, "!${rand}") :
     rator.op === "number?" ? unaryPrimToJs(rator, rands, 'typeof ${rand} === "number"') :
     rator.op === "boolean?" ? unaryPrimToJs(rator, rands, 'typeof ${rand} === "boolean"') :
 
@@ -79,19 +79,20 @@ Signature: l2ToJS(exp)
 Type: [Exp | Program -> Result(string)]
 */
 export const l2ToJS = (exp: Exp | Program): Result<string> => 
-    isProgram(exp) ? bind(mapResult(l2ToJS, exp.exps), (exps: string[]) => makeOk(exps.join("\n"))) :
+    isProgram(exp) ? bind(mapResult(l2ToJS, exp.exps), (exps: string[]) =>
+        makeOk(exps.slice(0, -1).join(";\n").concat(`;\nconsole.log(${first(exps.slice(-1))});`))) :
     isBoolExp(exp) ? makeOk(exp.val ? "true" : "false") :
     isNumExp(exp) ? makeOk(exp.val.toString()) :
     isVarRef(exp) ? makeOk(exp.var) :
     isPrimOp(exp) ? makeOk(exp.op) :
-    isDefineExp(exp) ? bind(l2ToJS(exp.val), (val: string) => makeOk(`const ${exp.var.var} = ${val};`)) :
+    isDefineExp(exp) ? bind(l2ToJS(exp.val), (val: string) => makeOk(`const ${exp.var.var} = ${val}`)) :
     isProcExp(exp) ? bind(mapResult(l2ToJS, exp.body),
                           (body: string[]) =>
-                                makeOk(`(${map(v => v.var, exp.args).join(",")}) => ${procBodyStringToJs(body)})`)) :
-    isIfExp(exp) ? safe3((test: string, then: string, alt: string) => makeOk(`${test} ? ${then} : ${alt};`))
+                                makeOk(`((${map(v => v.var, exp.args).join(",")}) => ${procBodyStringToJs(body)})`)) :
+    isIfExp(exp) ? safe3((test: string, then: string, alt: string) => makeOk(`(${test} ? ${then} : ${alt})`))
                     (l2ToJS(exp.test), l2ToJS(exp.then), l2ToJS(exp.alt)) :
     isAppExp(exp) ?
-        isPrimOp(exp.rator) ? primAppToJS(exp.rator, exp.rands) :
+        isPrimOp(exp.rator) ? bind(primAppToJS(exp.rator, exp.rands), (app: string) => makeOk(`(${app})`)) :
                               safe2((rator: string, rands: string[]) => makeOk(`${rator}(${rands.join(",")})`))
                                 (l2ToJS(exp.rator), mapResult(l2ToJS, exp.rands)) :
     makeFailure(`Unknown expression: ${exp}`);
