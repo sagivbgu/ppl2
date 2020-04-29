@@ -3,21 +3,24 @@ import { Result, makeOk, makeFailure, mapResult, bind, safe3, safe2 } from "../i
 import { rest, first, isEmpty } from '../imp/list';
 import { map } from "ramda";
 
+const primOpToJS = (op: PrimOp): Result<string> =>
+    ["=", "eq?"].includes(op.op) ? makeOk("===") :
+    op.op === "and" ? makeOk("&&") :
+    op.op === "or" ? makeOk("||") :
+    op.op === "not" ? makeOk("!") :
+    op.op === "number?" ? makeOk(`((x) => typeof x === "number")`) :
+    op.op === "boolean?" ? makeOk(`((x) => typeof x === "boolean")`) :
+    makeOk(op.op);
+
 const unaryPrimToJs = (rator: PrimOp, rands: CExp[], resultPattern: string): Result<string> =>
-    isEmpty(rands) || !isEmpty(rest(rands)) ? makeFailure(`'${rator.op}' arity mismatch"`) :
+    isEmpty(rands) ? makeFailure(`'${rator.op}' arity mismatch"`) :
     bind(l2ToJS(first(rands)), (rand: string) => makeOk(resultPattern.replace("${rand}", rand)));
 
-const binaryAppToJS = (rator: string, rands: CExp[]): Result<string> =>
-    safe2((rand1: string, rand2: string) => makeOk(`${rand1} ${rator} ${rand2}`))
-        (l2ToJS(rands[0]), l2ToJS(rands[1]));
+const binaryPrimToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
+    isEmpty(rands) || isEmpty(rest(rands)) ? makeFailure(`${rator.op} arity mismatch`) :
+        safe3((rator: string, rand1: string, rand2: string) => makeOk(`${rand1} ${rator} ${rand2}`))
+        (l2ToJS(rator), l2ToJS(rands[0]), l2ToJS(rands[1]));
 
-const equalityPrimToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
-{
-    const operator = ["=", "eq?"].includes(rator.op) ? "===" : rator.op;
-    return isEmpty(rands) ? makeFailure(`${operator} arity mismatch`) :
-        isEmpty(rest(rands)) ? makeOk("true") :
-        binaryAppToJS(operator, rands);
-}
 
 const joinAllRands = (rator: PrimOp, rands: CExp[]): Result<string> =>
     bind(mapResult((rand: CExp) => l2ToJS(rand), rands), (rands: string[]) => makeOk(rands.join(` ${rator.op} `)));
@@ -25,17 +28,19 @@ const joinAllRands = (rator: PrimOp, rands: CExp[]): Result<string> =>
 const primAppToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
     rator.op === "+" ?
         isEmpty(rands) ? makeOk("0") :
-        isEmpty(rest(rands)) ? l2ToJS(first(rands)) : // TODO: Make sure, can also be `(+${l2ToJS(first(rands))})`
+        isEmpty(rest(rands)) ? l2ToJS(first(rands)) :
         joinAllRands(rator, rands) :
 
     rator.op === "*" ?
         isEmpty(rands) ? makeOk("1") :
-        isEmpty(rest(rands)) ? l2ToJS(first(rands)) : // TODO: Make sure, can also be `1 * ${l2ToJS(first(rands))}`
+        isEmpty(rest(rands)) ? l2ToJS(first(rands)) :
         joinAllRands(rator, rands) :
 
     rator.op === "-" ?
         isEmpty(rands) ? makeFailure("'-' arity mismatch") :
-        isEmpty(rest(rands)) ? bind(l2ToJS(first(rands)), (rand: string) => makeOk(`-(${rand})`)) :
+        isEmpty(rest(rands)) ? bind(l2ToJS(first(rands)), (rand: string) =>
+            rand.startsWith("-") ? makeOk(`-(${rand})`) : makeOk(`-${rand}`)) :
+
         // For each rand, if it's a negative number, wrap it in parentheses. Then, join all rands with ' - '.
         bind(mapResult(
                 (rand: CExp) => bind(l2ToJS(rand), (rand: string) => rand.startsWith("-") ? makeOk(`(${rand})`) : makeOk(rand)),
@@ -47,17 +52,7 @@ const primAppToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
         isEmpty(rest(rands)) ? bind(l2ToJS(first(rands)), (rand: string) => makeOk(`1 / ${rand}`)) :
         joinAllRands(rator, rands) :
 
-    rator.op === "and" ?
-        isEmpty(rands) ? makeOk("true") :
-        isEmpty(rest(rands)) ? l2ToJS(first(rands)) :
-        binaryAppToJS("&&", rands) :
-        
-    rator.op === "or" ?
-        isEmpty(rands) ? makeOk("false") :
-        isEmpty(rest(rands)) ? l2ToJS(first(rands)) :
-        binaryAppToJS("||", rands) :
-    
-    ["<", ">", "=", "eq?"].includes(rator.op) ? equalityPrimToJS(rator, rands) :
+    ["and", "or", "<", ">", "=", "eq?"].includes(rator.op) ? binaryPrimToJS(rator, rands) :
 
     rator.op === "not" ? unaryPrimToJs(rator, rands, "!${rand}") :
     rator.op === "number?" ? unaryPrimToJs(rator, rands, 'typeof ${rand} === "number"') :
@@ -80,11 +75,11 @@ Type: [Exp | Program -> Result(string)]
 */
 export const l2ToJS = (exp: Exp | Program): Result<string> => 
     isProgram(exp) ? bind(mapResult(l2ToJS, exp.exps), (exps: string[]) =>
-        makeOk(exps.slice(0, -1).join(";\n").concat(`;\nconsole.log(${first(exps.slice(-1))});`))) :
+        makeOk(exps.slice(0, -1).concat(`console.log(${first(exps.slice(-1))});`).join(";\n"))) :
     isBoolExp(exp) ? makeOk(exp.val ? "true" : "false") :
     isNumExp(exp) ? makeOk(exp.val.toString()) :
     isVarRef(exp) ? makeOk(exp.var) :
-    isPrimOp(exp) ? makeOk(exp.op) :
+    isPrimOp(exp) ? primOpToJS(exp) :
     isDefineExp(exp) ? bind(l2ToJS(exp.val), (val: string) => makeOk(`const ${exp.var.var} = ${val}`)) :
     isProcExp(exp) ? bind(mapResult(l2ToJS, exp.body),
                           (body: string[]) =>
