@@ -15,13 +15,22 @@ describe('Q2 Tests', () => {
         expect(evalP(`(L3 ` + q2 + ` (last-element (list 1 2 3)))`)).to.deep.equal(makeOk(3));
         expect(evalP(`(L3 ` + q2 + ` (last-element (list 1)))`)).to.deep.equal(makeOk(1));
         expect(evalP(`(L3 ` + q2 + ` (last-element (list 5 7 -6 6 4 2 1)))`)).to.deep.equal(makeOk(1));
-
+        expect(evalP(`(L3 ` + q2 + ` (last-element (list 2 (cons 2 3))))`)).to.deep.equal(makeOk({"tag" : "CompoundSexp", "val1" : 2,"val2" : 3}));
+//        expect(evalP(`(L3 ` + q2 + ` (last-element (list 2 (list 2 3 4))))`)).to.deep.equal(makeOk([2, 3, 4]));
+        expect(evalP(`(L3 ` + q2 + ` (last-element (list 2 (list 2 3 4) 7)))`)).to.deep.equal(makeOk(7));
     });
 
     it('power tests', () => {
         expect(evalP(`(L3 ` + q2 + ` (power 2 4))`)).to.deep.equal(makeOk(16));
         expect(evalP(`(L3 ` + q2 + ` (power 0 3))`)).to.deep.equal(makeOk(0));
         expect(evalP(`(L3 ` + q2 + ` (power 3 0))`)).to.deep.equal(makeOk(1));
+
+        expect(evalP(`(L3 ` + q2 + ` (power 5 2))`)).to.deep.equal(makeOk(25));
+        expect(evalP(`(L3 ` + q2 + ` (power 5 1))`)).to.deep.equal(makeOk(5));
+        expect(evalP(`(L3 ` + q2 + ` (power 1 5))`)).to.deep.equal(makeOk(1));
+        expect(evalP(`(L3 ` + q2 + ` (power 1 0))`)).to.deep.equal(makeOk(1));
+        expect(evalP(`(L3 ` + q2 + ` (power 0 0))`)).to.deep.equal(makeOk(1));
+        expect(evalP(`(L3 ` + q2 + ` (power 0 1))`)).to.deep.equal(makeOk(0));
     });
 
     it('sum-lst-power tests', () => {
