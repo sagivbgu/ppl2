@@ -35,7 +35,10 @@ describe('Q2 Tests', () => {
 
     it('sum-lst-power tests', () => {
         expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list 1 2 3) 2))`)).to.deep.equal(makeOk(14));
+        expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list 1 2 3) 1))`)).to.deep.equal(makeOk(6));
+        expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list 1 2 4) 0))`)).to.deep.equal(makeOk(3));
         expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list) 2))`)).to.deep.equal(makeOk(0));
+        expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list) 0))`)).to.deep.equal(makeOk(0));
         expect(evalP(`(L3 ` + q2 + ` (sum-lst-power (list 1 1 4) 3))`)).to.deep.equal(makeOk(66));
     });
 
@@ -51,6 +54,7 @@ describe('Q2 Tests', () => {
         expect(evalP(`(L3 ` + q2 + ` (is-narcissistic (list 1)))`)).to.deep.equal(makeOk(true));
         expect(evalP(`(L3 ` + q2 + ` (is-narcissistic (list 1 5 3)))`)).to.deep.equal(makeOk(true));
         expect(evalP(`(L3 ` + q2 + ` (is-narcissistic (list 1 3 5)))`)).to.deep.equal(makeOk(false));
+        expect(evalP(`(L3 ` + q2 + ` (is-narcissistic (list 3 7 0)))`)).to.deep.equal(makeOk(true));
         expect(evalP(`(L3 ` + q2 + ` (is-narcissistic (list 3 7 1)))`)).to.deep.equal(makeOk(true));
     });
 });
