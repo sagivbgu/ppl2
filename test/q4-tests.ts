@@ -39,6 +39,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(and #f #t)`)).to.deep.equal(makeOk(`(false && true)`));
         expect(l2toJSResult(`(and (> 1 2) #t)`)).to.deep.equal(makeOk(`((1 > 2) && true)`));
         expect(l2toJSResult(`(and #f #t #t)`)).to.deep.equal(makeOk(`(false && true)`));
+        expect(l2toJSResult(`(and #f (and #t #t)`)).to.deep.equal(makeOk(`(false && (false && true))`));
 
         expect(l2toJSResult(`(or )`)).to.satisfy(isFailure);
         expect(l2toJSResult(`(or #f)`)).to.satisfy(isFailure);
@@ -72,6 +73,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(not #t)`)).to.deep.equal(makeOk(`(!true)`));
         expect(l2toJSResult(`(not (lambda (x) (= 1 x)))`)).to.deep.equal(makeOk(`(!((x) => (1 === x)))`));
         expect(l2toJSResult(`(not #t #f )`)).to.deep.equal(makeOk(`(!true)`));
+        expect(l2toJSResult(`(not (not #t))`)).to.deep.equal(makeOk(`(!(!true))`));
     });
 
     it('parses "number?" primitive ops', () => {
