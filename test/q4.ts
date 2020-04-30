@@ -21,7 +21,6 @@ const binaryPrimToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
         safe3((rator: string, rand1: string, rand2: string) => makeOk(`${rand1} ${rator} ${rand2}`))
         (l2ToJS(rator), l2ToJS(rands[0]), l2ToJS(rands[1]));
 
-
 const joinAllRands = (rator: PrimOp, rands: CExp[]): Result<string> =>
     bind(mapResult((rand: CExp) => l2ToJS(rand), rands), (rands: string[]) => makeOk(rands.join(` ${rator.op} `)));
 
@@ -65,8 +64,6 @@ const procBodyStringToJs = (body: string[]): string =>
     isEmpty(rest(body)) ?
     first(body) :
     `{${body.slice(0, -1).join("; ")}; return ${first(body.slice(-1))};}`;
-//    `{${body.slice(0, -1).concat("return ".concat(first(body.slice(-1)))).join("; ")};}`;
-
 
 /*
 Purpose: Transform a given L2 program to a JavaScript program

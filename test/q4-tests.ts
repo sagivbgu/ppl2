@@ -15,6 +15,7 @@ describe('Q4 Tests', () => {
     
     it('parses primitive ops (extra cases)', () => {   
         expect(l2toJSResult(`(eq? 3 (* 1 2 3))`)).to.deep.equal(makeOk(`(3 === (1 * 2 * 3))`));
+        expect(l2toJSResult(`(eq? 3 (/ 9 2 3))`)).to.deep.equal(makeOk(`(3 === (9 / 2 / 3))`));
         expect(l2toJSResult(`(+ (+ ) (* ))`)).to.deep.equal(makeOk(`((0) + (1))`));
         expect(l2toJSResult(`(- -3 5 -7)`)).to.deep.equal(makeOk(`((-3) - 5 - (-7))`));
         expect(l2toJSResult(`(- 3 -5 7)`)).to.deep.equal(makeOk(`(3 - (-5) - 7)`));
