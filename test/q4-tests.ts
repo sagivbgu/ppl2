@@ -39,7 +39,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(and #f #t)`)).to.deep.equal(makeOk(`(false && true)`));
         expect(l2toJSResult(`(and (> 1 2) #t)`)).to.deep.equal(makeOk(`((1 > 2) && true)`));
         expect(l2toJSResult(`(and #f #t #t)`)).to.deep.equal(makeOk(`(false && true)`));
-        expect(l2toJSResult(`(and #f (and #t #t)`)).to.deep.equal(makeOk(`(false && (false && true))`));
+        expect(l2toJSResult(`(and #f (and #t #t))`)).to.deep.equal(makeOk(`(false && (true && true))`));
 
         expect(l2toJSResult(`(or )`)).to.satisfy(isFailure);
         expect(l2toJSResult(`(or #f)`)).to.satisfy(isFailure);
@@ -47,6 +47,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(or (< 1 2) #t)`)).to.deep.equal(makeOk(`((1 < 2) || true)`));
         expect(l2toJSResult(`(or #f #t)`)).to.deep.equal(makeOk(`(false || true)`));
         expect(l2toJSResult(`(or #f #t #f)`)).to.deep.equal(makeOk(`(false || true)`));
+        expect(l2toJSResult(`(or #f (or #t #f))`)).to.deep.equal(makeOk(`(false || (true || false))`));
     });
 
     it('parses equality primitive ops', () => {
@@ -66,6 +67,9 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(eq? 1)`)).to.satisfy(isFailure);
         expect(l2toJSResult(`(eq? 1 2)`)).to.deep.equal(makeOk(`(1 === 2)`));
         expect(l2toJSResult(`(eq? 1 2 3)`)).to.deep.equal(makeOk(`(1 === 2)`));
+        expect(l2toJSResult(`(> 1 (+ 2 3))`)).to.deep.equal(makeOk(`(1 > (2 + 3))`));
+        expect(l2toJSResult(`(> 1 (> 2 3))`)).to.deep.equal(makeOk(`(1 > (2 > 3))`));
+
     });
 
     it('parses "not" primitive ops', () => {
@@ -81,6 +85,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(number? -1)`)).to.deep.equal(makeOk(`(typeof -1 === "number")`));
         expect(l2toJSResult(`(number? #f)`)).to.deep.equal(makeOk(`(typeof false === "number")`));
         expect(l2toJSResult(`(number? 1 2)`)).to.deep.equal(makeOk(`(typeof 1 === "number")`));
+        expect(l2toJSResult(`(number? (number? 1 2))`)).to.deep.equal(makeOk(`(typeof (typeof 1 === "number") === "number")`));
     });
 
     it('parses "boolean?" primitive ops', () => {
@@ -108,6 +113,7 @@ describe('Q4 Tests', () => {
 
     it('parses "if" expressions', () => {
         expect(l2toJSResult(`(if (> x 3) 4 5)`)).to.deep.equal(makeOk(`((x > 3) ? 4 : 5)`));
+        expect(l2toJSResult(`(if (> x 3) (if (< x 7) (+ 7 2) 6) 5)`)).to.deep.equal(makeOk(`((x > 3) ? ((x < 7) ? (7 + 2) : 6) : 5)`));
     });
 
     it('parses "lambda" expressions', () => {
@@ -117,6 +123,8 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(lambda () (* 1 2))`)).to.deep.equal(makeOk(`(() => (1 * 2))`));
         expect(l2toJSResult(`((lambda () (* 1 2)))`)).to.deep.equal(makeOk(`(() => (1 * 2))()`));
         expect(l2toJSResult(`((lambda (x y z) (* x y z)) 3 4 5)`)).to.deep.equal(makeOk(`((x,y,z) => (x * y * z))(3,4,5)`));
+
+        expect(l2toJSResult(`((lambda (a b) ((lambda (x y) (* x y)) 3 4)) 8 9)`)).to.deep.equal(makeOk(`((a,b) => ((x,y) => (x * y))(3,4))(8,9)`));
     });
     
     it("defines constants", () => {
@@ -132,6 +140,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(f 3)`)).to.deep.equal(makeOk(`f(3)`));
         expect(l2toJSResult(`(f 3 4)`)).to.deep.equal(makeOk(`f(3,4)`));
         expect(l2toJSResult(`(f 3 4 5)`)).to.deep.equal(makeOk(`f(3,4,5)`));
+        expect(l2toJSResult(`(f 3 (g 4) 5)`)).to.deep.equal(makeOk(`f(3,g(4),5)`));
     });
 
     it("parses functions with multiple body expressions", () => {
