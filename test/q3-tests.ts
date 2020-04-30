@@ -28,5 +28,25 @@ describe('Q3 Tests', () => {
     it('test 2', () => {
         expect(bind(bind(parseL21(`(L21 ((lambda (x) (* x x)) (+ 5 4)) (if (> y 6) 8 (for i 1 3 (* i i))))`), L21ToL2), unparseL21)).to.deep.equal(makeOk(`(L21 ((lambda (x) (* x x)) (+ 5 4)) (if (> y 6) 8 ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )))`));
     });
+
+    it('test 3', () => {
+        expect(bind(bind(parseL21(`(L21 ((lambda (x) (for i 1 3 (* i i))) 4) (if (> y 6) 8 (for i 1 3 (* i i))))`), L21ToL2), unparseL21))
+        .to.deep.equal(makeOk(`(L21 ((lambda (x) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) 4) (if (> y 6) 8 ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )))`));
+    });
+
+    it('test 4', () => {
+        expect(bind(bind(parseL21(`(L21 ((lambda (x) (* x x)) (for i 1 3 (* i i))) (if (> y 6) 8 (for i 1 3 (for i 1 3 (* i i)))))`), L21ToL2), unparseL21))
+        .to.deep.equal(makeOk(`(L21 ((lambda (x) (* x x)) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) (if (> y 6) 8 ((lambda () ((lambda (i) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) 1) ((lambda (i) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) 2) ((lambda (i) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) 3)) )))`));
+    });
+
+    it('test 5', () => {
+        expect(bind(bind(parseL21(`(L21 (define f (for i 1 3 (* i i))) (f))`), L21ToL2), unparseL21))
+        .to.deep.equal(makeOk(`(L21 (define f ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) )) (f ))`));
+    });
+
+    it('test 6', () => {
+        expect(bind(bind(parseL21(`(L21 (define f ((lambda (x) (if (> x 2) (for i 1 3 (* i i)) 3)) (for i 1 3 (* i i)))) (f))`), L21ToL2), unparseL21))
+        .to.deep.equal(makeOk(`(L21 (define f ((lambda (x) (if (> x 2) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) ) 3)) ((lambda () ((lambda (i) (* i i)) 1) ((lambda (i) (* i i)) 2) ((lambda (i) (* i i)) 3)) ))) (f ))`));
+    });
 });
 

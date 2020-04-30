@@ -151,7 +151,7 @@ export const parseL21CompoundExp = (op: Sexp, params: Sexp[]): Result<Exp> =>
     op === "define"? parseDefine(params) :
     parseL21CompoundCExp(op, params);
 
-// <CompoundCExp> -> <AppExp> | <IfExp> | <ProcExp>
+// <CompoundCExp> -> <AppExp> | <IfExp> | <ProcExp> | <ForExp>
 export const parseL21CompoundCExp = (op: Sexp, params: Sexp[]): Result<CExp> =>
     op === "if" ? parseIfExp(params) :
     op === "lambda" ? parseProcExp(first(params), rest(params)) :
@@ -213,5 +213,5 @@ const parseForExp = (first: Sexp, rest: Sexp[]): Result<ForExp> =>
    isEmpty(first) || rest.length !== 3 ? makeFailure("Expression not of the form (for <var> <num> <num> <cexp>)") :
    !isIdentifier(first) ? makeFailure("First arg of for should be variable") :
    bind(mapResult(parseL21CExp, rest),
-        (cexps: CExp[]) => !isNumExp(cexps[0]) || !isNumExp(cexps[1]) ? makeFailure("Second and third args of for should be num") :
+        (cexps: CExp[]) => !isNumExp(cexps[0]) || !isNumExp(cexps[1]) ? makeFailure("Second and third args of for should be numbers") :
                            makeOk(makeForExp(makeVarDecl(first), cexps[0], cexps[1], cexps[2])));

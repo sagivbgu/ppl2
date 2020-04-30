@@ -1,6 +1,6 @@
 import fs from "fs";
 import { expect } from 'chai';
-import { evalParse, evalL3program } from '../imp/L3-eval';
+import { evalL3program } from '../imp/L3-eval';
 import { Value } from "../imp/L3-value";
 import { Result, bind, makeOk } from "../imp/result";
 import { parseL3 } from "../imp/L3-ast";

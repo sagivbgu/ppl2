@@ -1,23 +1,12 @@
 import { ForExp, AppExp, Exp, CExp, isCExp, Program, makeAppExp, makeProcExp, makeNumExp, 
          isForExp, isProgram, makeProgram, isDefineExp, isAppExp, isIfExp, isProcExp, 
-         makeIfExp, makeDefineExp,
-        makeForExp,  makeVarDecl, makePrimOp, makeVarRef} from "./L21-ast";
+         makeIfExp, makeDefineExp} from "./L21-ast";
 import { Result, makeOk, bind, mapResult, makeFailure, safe2 } from "../imp/result";
-import { append, map } from 'ramda';
-
-/*
- Signature: createNumsArray(start, end)
- Type: [number * number] => number[]
- Purpose: Create an array of integers starting from "start" until "end" (included)
- Pre-conditions: end >= start
- Tests: createNumsArray(1, 3) === [1, 2, 3]
-*/
-const createNumsArray = (start: number, end: number): number[] =>
-    start === end ? [start] : append(end, createNumsArray(start, end - 1));
+import { map, range } from 'ramda';
 
 /*
 Signature: for2app(exp)
-Type: (exp: ForExp) => AppExp
+Type: [ForExp -> AppExp]
 Purpose: convert an AST of ForExp to the equivalent AST of AppExp
 Pre-conditions: None
 Tests:  for2app(makeForExp(
@@ -44,13 +33,11 @@ Tests:  for2app(makeForExp(
                 ]),[]);
 */
 export const for2app = (exp: ForExp): AppExp => {
-    const numsArray = createNumsArray(exp.start.val, exp.end.val); // Create an array of numbers [start, ..., end]
-
     const procBody = map((x: number): AppExp => 
                         makeAppExp(makeProcExp([exp.var], [exp.body]), [makeNumExp(x)]),
-                        numsArray); // the body of the proc is AppExps each applies
-                                    // a ProcExp with the same body of the ForExp 
-                                    // on each number in the array [start, ... , end]
+                        range(exp.start.val, exp.end.val + 1)); // the body of the proc is AppExps each applies
+                                                                // a ProcExp with the same body of the ForExp 
+                                                                // on each number in the array [start, ... , end]
 
     return makeAppExp(makeProcExp([], procBody) // Finally, create an AppExp applying this ProcExp
                       ,[]);                     // the AppExp has no operands
@@ -58,7 +45,7 @@ export const for2app = (exp: ForExp): AppExp => {
 
 /*
 Signature: L21ToL2(exp)
-Type: (exp: Exp | Program) => Result<Exp | Program>
+Type: [Exp | Program -> Result(Exp | Program)]
 Purpose: Convert an L21 AST to the equivalent L2 AST (without ForExp)
 Pre-conditions: None
 Tests: (L21 ((lambda (x) (* x x)) (+ 5 4)) (if (> y 6) 8 (for i 1 3 (* i i)))) ===
@@ -73,7 +60,7 @@ export const L21ToL2 = (exp: Exp | Program): Result<Exp | Program> =>
 
 /*
 Signature: convertExp(exp)
-Type: (exp: Exp) => Result<Exp>
+Type: [Exp -> Result(Exp)]
 Purpose: Convert an Exp in L21 to the equivalent Exp in L2
 Pre-conditions: None
 Tests: the same as L21ToL2
@@ -86,7 +73,7 @@ const convertExp = (exp: Exp) : Result<Exp> =>
 
 /*
 Signature: convertCExp(exp)
-Type: (exp: CExp) => Result<CExp>
+Type: [CExp -> Result(CExp)]
 Purpose: Convert a CExp in L21 to the equivalent CExp in L2
 Pre-conditions: None
 Tests: the same as L21ToL2

@@ -3,6 +3,13 @@ import { Result, makeOk, makeFailure, mapResult, bind, safe3, safe2 } from "../i
 import { rest, first, isEmpty } from '../imp/list';
 import { map } from "ramda";
 
+/*
+Purpose: Transform PrimOp operator to its JavaScript equivalent
+Signature: primOpToJS(op)
+Type: [PrimOp -> Result(string)]
+Pre-conditions: None
+Tests: primOpToJS({tag: "PrimOp", op: "and" }) -> "&&"
+*/
 const primOpToJS = (op: PrimOp): Result<string> =>
     ["=", "eq?"].includes(op.op) ? makeOk("===") :
     op.op === "and" ? makeOk("&&") :
@@ -12,18 +19,48 @@ const primOpToJS = (op: PrimOp): Result<string> =>
     op.op === "boolean?" ? makeOk(`((x) => typeof x === "boolean")`) :
     makeOk(op.op);
 
+/*
+Purpose: Transform PrimOp unary operator and operands of an AppExp to its JavaScript equivalent,
+         using the result pattern
+Signature: unaryPrimToJs(rator, rands, resultPattern)
+Type: [PrimOp * CExp[] * string -> Result(string)]
+Pre-conditions: None
+Tests: unaryPrimToJs({tag: "PrimOp", op: "not"}, [{tag: "BoolExp"; val: #t }], "!${rand}") -> "!true"
+*/
 const unaryPrimToJs = (rator: PrimOp, rands: CExp[], resultPattern: string): Result<string> =>
     isEmpty(rands) ? makeFailure(`'${rator.op}' arity mismatch"`) :
     bind(l2ToJS(first(rands)), (rand: string) => makeOk(resultPattern.replace("${rand}", rand)));
 
+/*
+Purpose: Transform PrimOp binary operator and operands of an AppExp to its JavaScript equivalent
+Signature: binaryPrimToJS(rator, rands)
+Type: [PrimOp * CExp[] -> Result(string)]
+Pre-conditions: None
+Tests: binaryPrimToJS({tag: "PrimOp", op: ">"}, [{tag: "NumExp"; val: 2 }, {tag: "NumExp"; val: 1 }]) -> "2 > 1"
+*/
 const binaryPrimToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
     isEmpty(rands) || isEmpty(rest(rands)) ? makeFailure(`${rator.op} arity mismatch`) :
         safe3((rator: string, rand1: string, rand2: string) => makeOk(`${rand1} ${rator} ${rand2}`))
         (l2ToJS(rator), l2ToJS(rands[0]), l2ToJS(rands[1]));
 
+/*
+Purpose: Make a string of all the operands seperated by the operator sign
+Signature: joinAllRands(rator, rands)
+Type: [PrimOp * CExp[] -> Result(string)]
+Pre-conditions: None
+Tests: joinAllRands({tag: "PrimOp", op: "+"}, [{tag: "NumExp"; val: 2 }, {tag: "NumExp"; val: 3 }, {tag: "NumExp"; val: 5 }])
+       -> "2 + 3 + 5"
+*/
 const joinAllRands = (rator: PrimOp, rands: CExp[]): Result<string> =>
     bind(mapResult((rand: CExp) => l2ToJS(rand), rands), (rands: string[]) => makeOk(rands.join(` ${rator.op} `)));
 
+/*
+Purpose: Transform PrimOp operator and operands of an AppExp to its JavaScript equivalent
+Signature: primAppToJS(rator, rands)
+Type: [PrimOp * CExp[] -> Result(string)]
+Pre-conditions: None
+Tests: as part of l2ToJS tests
+*/
 const primAppToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
     rator.op === "+" ?
         isEmpty(rands) ? makeOk("0") :
@@ -59,7 +96,13 @@ const primAppToJS = (rator: PrimOp, rands: CExp[]): Result<string> =>
 
     makeFailure(`Invalid AppExp ${rator} ${rands}`);
 
-
+/*
+Purpose: Make a function body from the Javascript statements that consist it
+Signature: procBodyStringToJs(body)
+Type: [string[] -> string]
+Pre-conditions: None
+Tests: procBodyStringToJs(["const x = 3", "x"]) -> "{const x = 3; return x;}"
+*/
 const procBodyStringToJs = (body: string[]): string =>
     isEmpty(rest(body)) ?
     first(body) :
@@ -69,6 +112,8 @@ const procBodyStringToJs = (body: string[]): string =>
 Purpose: Transform a given L2 program to a JavaScript program
 Signature: l2ToJS(exp)
 Type: [Exp | Program -> Result(string)]
+Pre-conditions: None
+Tests: as in q4-tests.ts
 */
 export const l2ToJS = (exp: Exp | Program): Result<string> => 
     isProgram(exp) ? bind(mapResult(l2ToJS, exp.exps), (exps: string[]) =>
