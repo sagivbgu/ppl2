@@ -214,4 +214,5 @@ const parseForExp = (first: Sexp, rest: Sexp[]): Result<ForExp> =>
    !isIdentifier(first) ? makeFailure("First arg of for should be variable") :
    bind(mapResult(parseL21CExp, rest),
         (cexps: CExp[]) => !isNumExp(cexps[0]) || !isNumExp(cexps[1]) ? makeFailure("Second and third args of for should be numbers") :
+                            cexps[0].val > cexps[1].val ? makeFailure("in ForExp start can't be larger than end") :
                            makeOk(makeForExp(makeVarDecl(first), cexps[0], cexps[1], cexps[2])));
