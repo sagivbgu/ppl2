@@ -76,6 +76,7 @@ describe('Q4 Tests', () => {
         expect(l2toJSResult(`(not )`)).to.satisfy(isFailure);
         expect(l2toJSResult(`(not #t)`)).to.deep.equal(makeOk(`(!true)`));
         expect(l2toJSResult(`(not (lambda (x) (= 1 x)))`)).to.deep.equal(makeOk(`(!((x) => (1 === x)))`));
+        expect(l2toJSResult(`(not (> 1 2))`)).to.deep.equal(makeOk(`(!(1 > 2))`));
         expect(l2toJSResult(`(not #t #f )`)).to.deep.equal(makeOk(`(!true)`));
         expect(l2toJSResult(`(not (not #t))`)).to.deep.equal(makeOk(`(!(!true))`));
     });
